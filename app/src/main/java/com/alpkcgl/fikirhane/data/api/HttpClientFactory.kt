@@ -13,11 +13,14 @@ import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-/** Sunucu yeni alan eklerse eski uygulama sürümleri bozulmasın. */
+/**
+ * Sunucu yeni alan eklerse eski uygulama sürümleri bozulmasın.
+ * `null` alanlar isteğe açıkça yazılır: PATCH /posts'ta kategori ya da kapağı kaldırmak
+ * için `"categoryId": null` gönderilmesi gerekir (alan hiç yoksa sunucu eski değeri korur).
+ */
 val ApiJson = Json {
     ignoreUnknownKeys = true
     coerceInputValues = true
-    explicitNulls = false
 }
 
 object HttpClientFactory {

@@ -4,7 +4,9 @@ import android.app.Application
 import android.content.Context
 import com.alpkcgl.fikirhane.data.api.FikirhaneApi
 import com.alpkcgl.fikirhane.data.api.HttpClientFactory
+import com.alpkcgl.fikirhane.data.image.ImagePreparer
 import com.alpkcgl.fikirhane.data.repository.AuthRepository
+import com.alpkcgl.fikirhane.data.repository.PostsRepository
 import com.alpkcgl.fikirhane.data.session.SharedPreferencesSessionStore
 import io.ktor.client.engine.okhttp.OkHttp
 
@@ -18,6 +20,8 @@ class AppContainer(context: Context) {
     private val api = FikirhaneApi(http)
 
     val authRepository = AuthRepository(api, SharedPreferencesSessionStore(context))
+    val postsRepository = PostsRepository(api, authRepository)
+    val imagePreparer = ImagePreparer(context.contentResolver)
 }
 
 class FikirhaneApp : Application() {

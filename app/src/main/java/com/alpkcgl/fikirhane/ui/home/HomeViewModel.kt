@@ -5,39 +5,52 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.alpkcgl.fikirhane.data.api.ApiException
+import com.alpkcgl.fikirhane.data.model.PostQuery
 import com.alpkcgl.fikirhane.data.model.PublicUser
 import com.alpkcgl.fikirhane.data.repository.AuthRepository
+import com.alpkcgl.fikirhane.data.repository.PostsRepository
 import com.alpkcgl.fikirhane.ui.appContainer
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.alpkcgl.fikirhane.ui.posts.PagedPosts
+import com.alpkcgl.fikirhane.ui.posts.PostPager
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
-class HomeViewModel(private val auth: AuthRepository) : ViewModel() {
+/** Ana akış: yayındaki yazılar, en yeniden eskiye. */
+class HomeViewModel(
+    private val auth: AuthRepository,
+    posts: PostsRepository,
+) : ViewModel() {
     val user: StateFlow<PublicUser?> = auth.currentUser
 
-    /** Oturum doğrulanamadıysa (ör. ağ yok) gösterilecek bilgi. */
-    private val _notice = MutableStateFlow<String?>(null)
-    val notice: StateFlow<String?> = _notice.asStateFlow()
+    private val pager = PostPager(viewModelScope) { page -> posts.list(PostQuery(), page) }
+    val feed: StateFlow<PagedPosts> = pager.state
 
     init {
-        // Kayıtlı bilgiyle hemen gösterilir, ardından sunucudan doğrulanır (rol değişmiş olabilir).
+        pager.refresh()
+        // Bir yazı eklenince/güncellenince/silinince akış yenilenir.
+        viewModelScope.launch { posts.changes.drop(1).collect { pager.refresh() } }
+        // Kullanıcı bilgisi (ör. rol) sunucudan tazelenir; 401'de oturum kapanır, NavHost yönlendirir.
         viewModelScope.launch {
             try {
                 auth.refreshUser()
-                _notice.value = null
-            } catch (e: ApiException) {
-                // 401'de AuthRepository oturumu kapatır ve NavHost giriş ekranına döner.
-                if (!e.isUnauthorized) _notice.value = e.message
+            } catch (_: ApiException) {
+                // Ağ hatasında kayıtlı bilgiyle devam edilir; akış kendi hatasını gösterir.
             }
         }
     }
 
+    fun refresh() = pager.refresh()
+    fun loadMore() = pager.loadMore()
+    fun retry() = pager.retry()
     fun logout() = auth.logout()
 
     companion object {
         val Factory = viewModelFactory {
-            initializer { HomeViewModel(appContainer().authRepository) }
+            initializer {
+                val container = appContainer()
+                HomeViewModel(container.authRepository, container.postsRepository)
+            }
         }
     }
 }

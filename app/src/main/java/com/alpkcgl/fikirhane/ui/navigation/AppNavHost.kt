@@ -14,7 +14,10 @@ import androidx.navigation.toRoute
 import com.alpkcgl.fikirhane.data.repository.AuthRepository
 import com.alpkcgl.fikirhane.ui.auth.LoginScreen
 import com.alpkcgl.fikirhane.ui.auth.RegisterScreen
+import com.alpkcgl.fikirhane.ui.editor.EditorScreen
 import com.alpkcgl.fikirhane.ui.home.HomeScreen
+import com.alpkcgl.fikirhane.ui.posts.MyPostsScreen
+import com.alpkcgl.fikirhane.ui.posts.PostDetailScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -25,6 +28,16 @@ data object RegisterRoute
 
 @Serializable
 data object HomeRoute
+
+@Serializable
+data class PostRoute(val slug: String)
+
+/** slug null: yeni yazı; dolu: o yazıyı düzenle. */
+@Serializable
+data class EditorRoute(val slug: String? = null)
+
+@Serializable
+data object MyPostsRoute
 
 /**
  * Oturum durumuna göre yönlendirir: giriş yapılınca ana ekrana, çıkış yapılınca ya da
@@ -38,9 +51,11 @@ fun AppNavHost(authRepository: AuthRepository) {
     val startDestination: Any = remember { if (loggedIn) HomeRoute else LoginRoute() }
 
     LaunchedEffect(loggedIn) {
-        val onHome = navController.currentDestination?.hasRoute<HomeRoute>() == true
-        if (loggedIn && !onHome) navController.resetTo(HomeRoute)
-        if (!loggedIn && onHome) navController.resetTo(LoginRoute())
+        val destination = navController.currentDestination
+        val onAuthScreen = destination == null ||
+            destination.hasRoute<LoginRoute>() || destination.hasRoute<RegisterRoute>()
+        if (loggedIn && onAuthScreen) navController.resetTo(HomeRoute)
+        if (!loggedIn && !onAuthScreen) navController.resetTo(LoginRoute())
     }
 
     NavHost(navController = navController, startDestination = startDestination) {
@@ -66,7 +81,38 @@ fun AppNavHost(authRepository: AuthRepository) {
                 },
             )
         }
-        composable<HomeRoute> { HomeScreen() }
+        composable<HomeRoute> {
+            HomeScreen(
+                onPostClick = { navController.navigate(PostRoute(it)) },
+                onWrite = { navController.navigate(EditorRoute()) },
+                onMyPosts = { navController.navigate(MyPostsRoute) },
+            )
+        }
+        composable<PostRoute> {
+            PostDetailScreen(
+                onBack = { navController.popBackStack() },
+                onEdit = { navController.navigate(EditorRoute(it)) },
+            )
+        }
+        composable<EditorRoute> {
+            EditorScreen(
+                onBack = { navController.popBackStack() },
+                onPublished = { slug ->
+                    // Editör yığından çıkarılır; geri tuşu yazıdan önceki ekrana döner.
+                    navController.navigate(PostRoute(slug)) {
+                        popUpTo<EditorRoute> { inclusive = true }
+                        // Düzenlemeye yazı sayfasından gelindiyse eski kopya da kaldırılır.
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+        composable<MyPostsRoute> {
+            MyPostsScreen(
+                onBack = { navController.popBackStack() },
+                onPostClick = { navController.navigate(PostRoute(it)) },
+            )
+        }
     }
 }
 

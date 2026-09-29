@@ -1,6 +1,22 @@
 package com.alpkcgl.fikirhane.data.api
 
+import com.alpkcgl.fikirhane.data.model.CategoriesResponse
+import com.alpkcgl.fikirhane.data.model.Category
 import com.alpkcgl.fikirhane.data.model.EmailRequest
+import com.alpkcgl.fikirhane.data.model.Page
+import com.alpkcgl.fikirhane.data.model.PostDetail
+import com.alpkcgl.fikirhane.data.model.PostInput
+import com.alpkcgl.fikirhane.data.model.PostQuery
+import com.alpkcgl.fikirhane.data.model.PostSummary
+import com.alpkcgl.fikirhane.data.model.UploadResponse
+import io.ktor.client.request.delete
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitFormWithBinaryData
+import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
+import io.ktor.http.encodeURLPathPart
 import com.alpkcgl.fikirhane.data.model.LoginRequest
 import com.alpkcgl.fikirhane.data.model.LoginResponse
 import com.alpkcgl.fikirhane.data.model.MessageResponse
@@ -43,6 +59,54 @@ class FikirhaneApi(private val http: HttpClient) {
 
     suspend fun resendConfirmation(email: String): MessageResponse =
         call { http.post("auth/resend-confirmation") { json(EmailRequest(email)) } }
+
+    // Yazılar
+
+    suspend fun listPosts(accessToken: String, query: PostQuery, page: Int, limit: Int = 10): Page<PostSummary> =
+        call {
+            http.get("posts") {
+                bearerAuth(accessToken)
+                parameter("page", page)
+                parameter("limit", limit)
+                parameter("status", query.status)
+                parameter("author", query.author)
+                parameter("category", query.category)
+                parameter("tag", query.tag)
+            }
+        }
+
+    suspend fun getPost(accessToken: String, slug: String): PostDetail =
+        call { http.get("posts/${slug.encodeURLPathPart()}") { bearerAuth(accessToken) } }
+
+    suspend fun createPost(accessToken: String, input: PostInput): PostDetail =
+        call { http.post("posts") { bearerAuth(accessToken); json(input) } }
+
+    suspend fun updatePost(accessToken: String, id: String, input: PostInput): PostDetail =
+        call { http.patch("posts/$id") { bearerAuth(accessToken); json(input) } }
+
+    suspend fun deletePost(accessToken: String, id: String): Unit =
+        call { http.delete("posts/$id") { bearerAuth(accessToken) } }
+
+    suspend fun listCategories(): List<Category> =
+        call<CategoriesResponse> { http.get("categories") }.items
+
+    /** Görseli yükler, herkese açık adresini döner (sunucu en fazla 4 MB kabul eder). */
+    suspend fun uploadImage(accessToken: String, bytes: ByteArray, mimeType: String, fileName: String): String =
+        call<UploadResponse> {
+            http.submitFormWithBinaryData(
+                url = "uploads/image",
+                formData = formData {
+                    append(
+                        "file",
+                        bytes,
+                        Headers.build {
+                            append(HttpHeaders.ContentType, mimeType)
+                            append(HttpHeaders.ContentDisposition, "filename=\"$fileName\"")
+                        },
+                    )
+                },
+            ) { bearerAuth(accessToken) }
+        }.url
 
     private inline fun <reified T> HttpRequestBuilder.json(body: T) {
         contentType(ContentType.Application.Json)
