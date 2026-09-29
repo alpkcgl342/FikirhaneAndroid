@@ -39,15 +39,19 @@ app/src/main/java/com/alpkcgl/fikirhane/
 │   ├── model/                 # API modelleri
 │   ├── session/               # Oturumun cihazda saklanması
 │   ├── image/                 # Görseli yüklemeden önce küçültme
-│   └── repository/            # AuthRepository (oturum), PostsRepository (yazılar)
+│   └── repository/            # Oturum, yazılar, kullanıcılar, bildirimler, moderasyon
 └── ui/
     ├── theme/                 # Web sitesiyle aynı renkler, serif başlıklar
-    ├── components/            # Ortak bileşenler (logo, form alanı, uyarı kutusu)
+    ├── components/            # Ortak bileşenler (logo, form alanı, avatar, şikâyet diyaloğu)
     ├── navigation/            # AppNavHost: oturum durumuna göre yönlendirme
     ├── auth/                  # Giriş ve kayıt ekranları
-    ├── home/                  # Ana akış (son yazılar)
-    ├── posts/                 # Yazı kartı, sayfalı liste, yazı detayı, Yazılarım
-    └── editor/                # Yazı oluşturma ve düzenleme
+    ├── home/                  # Ana akış (en yeniler, popüler, takip edilenler)
+    ├── posts/                 # Yazı kartı, sayfalı liste, yazı detayı, yorumlar, Yazılarım
+    ├── editor/                # Yazı oluşturma ve düzenleme
+    ├── profile/               # Profil ve profil düzenleme
+    ├── discover/              # Kategori/etiket sayfaları ve arama
+    ├── notifications/         # Bildirimler
+    └── admin/                 # Şikâyetler ve kullanıcı yönetimi
 ```
 
 ---
@@ -95,8 +99,28 @@ API_BASE_URL=http://10.0.2.2:3000/api/
 - **Yazı detayı:** Markdown içerik Compose ile çizilir. Ham HTML çalıştırılmaz, düz metin olarak gösterilir. Kendi yazında düzenle ve sil (onaylı) seçenekleri çıkar.
 - **Editör:** Başlık, kategori, etiketler (virgülle, en fazla 5), kapak görseli ve Markdown içerik; Yaz/Önizleme sekmeleri ve tahmini okuma süresi. Kaydedilmemiş değişiklik varken geri tuşunda onay istenir.
 - **Kapak görseli:** Android fotoğraf seçicisiyle (izin gerekmez) seçilir. Yüklemeden önce en fazla 1600 px genişliğe küçültülüp JPEG'e çevrilir (sunucu sınırı 4 MB); GIF'ler olduğu gibi gönderilir.
-- **Yazılarım:** Tümü / Taslaklar / Yayınlananlar sekmeleri.
+- **Yazılarım:** Tümü / Taslaklar / Yayınlananlar / Kaydedilenler sekmeleri.
 - Bir yazı eklenince, güncellenince ya da silinince açık listeler kendiliğinden yenilenir.
+
+---
+
+## Etkileşim
+
+- **Beğeni ve kaydetme:** Yazı detayındaki düğmelerle; sayılar anında güncellenir, web ile aynı veriyi kullanır.
+- **Yorumlar:** Yorum yazma ve yanıtlama; yanıtlar iç içe (en fazla 3 seviye girintili) gösterilir.
+- **Profil:** Yazarın adına dokununca profil açılır: biyografi, takipçi/takip sayıları ve yazıları. Başkasının profilinde takip et / bırak; kendi profilinde düzenle (ad, biyografi, avatar).
+
+## Keşfet
+
+- **Akış seçimi:** En yeniler, Popüler, Takip edilenler.
+- **Kategori ve etiket sayfaları:** Ana ekrandaki çiplerden ya da yazıdaki kategori/etiketten açılır; en yeni ve popüler sıralaması.
+- **Arama:** Yazılarda ve kişilerde arama; ilk sayfada eşleşen kişiler de listelenir.
+
+## Topluluk
+
+- **Bildirimler:** Yorum, yanıt, beğeni ve takip bildirimleri; okunmamış sayısı ana ekrandaki zilde görünür. Sayfa açılınca tümü okundu sayılır.
+- **Şikâyet:** Yazı, yorum ve kullanıcılar gerekçeyle şikâyet edilebilir.
+- **Moderasyon:** Moderatör ve yöneticiler menüde **Yönetim** ekranını görür: şikâyetleri durumuna göre listeleme, çözme/reddetme, yazı ve yorum kaldırma, kullanıcı arama ve yasaklama. Rol değiştirme yalnızca yöneticilere açıktır. Yasaklı kullanıcılar içerik okuyabilir ama yazamaz.
 
 ---
 
@@ -104,9 +128,9 @@ API_BASE_URL=http://10.0.2.2:3000/api/
 
 - [x] **Faz 1 — Temel:** Proje iskeleti, API katmanı, oturum saklama ve yenileme, giriş ve kayıt, ana ekran
 - [x] **Faz 2 — Yazılar:** Akış, yazı okuma (Markdown), yazı oluşturma ve düzenleme, kapak görseli, kategoriler, etiketler, Yazılarım
-- [ ] **Faz 3 — Etkileşim:** Yorumlar, beğeni, kaydetme, takip, profil
-- [ ] **Faz 4 — Keşfet:** Popüler ve takip akışı, kategori ve etiket sayfaları, arama
-- [ ] **Faz 5 — Topluluk:** Bildirimler, şikâyet, moderasyon
+- [x] **Faz 3 — Etkileşim:** Yorumlar, beğeni, kaydetme, takip, profil
+- [x] **Faz 4 — Keşfet:** Popüler ve takip akışı, kategori ve etiket sayfaları, arama
+- [x] **Faz 5 — Topluluk:** Bildirimler, şikâyet, moderasyon
 
 ---
 
