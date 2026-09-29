@@ -1,0 +1,24 @@
+# Gradle / derleme çıktıları
+.gradle/
+.kotlin/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Bu bilgisayara özgü ayarlar (SDK yolu, yerel API adresi)
+local.properties
+
+# Android Studio
+.idea/
+*.iml
+.navigation/
+
+# İmzalama anahtarları
+*.jks
+*.keystore
+
+# İşletim sistemi
+.DS_Store
+Thumbs.db
+*.log

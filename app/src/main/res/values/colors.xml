@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Web sitesiyle aynı palet -->
+    <color name="primary">#FFC2410C</color>
+    <color name="background">#FFFAF8F5</color>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Web sitesindeki logonun (ampul) uyarlanmış hâli; 108dp tuvalde ortadaki 66dp güvenli alanda. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,30a17,17 0,0 0,-10.2 30.6c1.7,1.2 2.9,3.2 2.9,5.3V68h14.6v-2.1c0,-2.1 1.2,-4.1 2.9,-5.3A17,17 0,0 0,54 30Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M48.2,72h11.6a2.4,2.4 0,0 1,0 4.8H48.2a2.4,2.4 0,0 1,0 -4.8Z" />
+</vector>

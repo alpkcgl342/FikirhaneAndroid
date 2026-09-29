@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Arayüz Compose ile çizilir; bu tema yalnızca pencere ve açılış ekranı içindir. -->
+    <style name="Theme.Fikirhane" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+    </style>
+</resources>
