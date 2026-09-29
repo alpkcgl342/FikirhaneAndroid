@@ -1,7 +1,12 @@
 package com.alpkcgl.fikirhane.data.repository
 
 import com.alpkcgl.fikirhane.data.api.FikirhaneApi
+import com.alpkcgl.fikirhane.data.model.BookmarkResult
 import com.alpkcgl.fikirhane.data.model.Category
+import com.alpkcgl.fikirhane.data.model.Comment
+import com.alpkcgl.fikirhane.data.model.CommentInput
+import com.alpkcgl.fikirhane.data.model.LikeResult
+import com.alpkcgl.fikirhane.data.model.SearchResponse
 import com.alpkcgl.fikirhane.data.model.Page
 import com.alpkcgl.fikirhane.data.model.PostDetail
 import com.alpkcgl.fikirhane.data.model.PostInput
@@ -42,6 +47,22 @@ class PostsRepository(
         auth.authorized { token -> api.deletePost(token, id) }
         _changes.update { it + 1 }
     }
+
+    /** Moderasyonla bir yazı kaldırıldığında listelerin yenilenmesi için. */
+    fun notifyChanged() = _changes.update { it + 1 }
+
+    suspend fun toggleLike(postId: String): LikeResult =
+        auth.authorized { token -> api.toggleLike(token, postId) }
+
+    suspend fun toggleBookmark(postId: String): BookmarkResult =
+        auth.authorized { token -> api.toggleBookmark(token, postId) }
+
+    suspend fun comments(postId: String): List<Comment> = api.listComments(postId)
+
+    suspend fun addComment(postId: String, content: String, parentId: String?): Comment =
+        auth.authorized { token -> api.createComment(token, postId, CommentInput(content.trim(), parentId)) }
+
+    suspend fun search(q: String, page: Int): SearchResponse = api.search(q, page)
 
     suspend fun uploadImage(image: PreparedImage): String =
         auth.authorized { token -> api.uploadImage(token, image.bytes, image.mimeType, image.fileName) }

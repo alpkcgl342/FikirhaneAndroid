@@ -1,6 +1,25 @@
 package com.alpkcgl.fikirhane.data.api
 
+import com.alpkcgl.fikirhane.data.model.AdminReport
+import com.alpkcgl.fikirhane.data.model.AdminUser
+import com.alpkcgl.fikirhane.data.model.BanInput
+import com.alpkcgl.fikirhane.data.model.BookmarkResult
 import com.alpkcgl.fikirhane.data.model.CategoriesResponse
+import com.alpkcgl.fikirhane.data.model.Comment
+import com.alpkcgl.fikirhane.data.model.CommentInput
+import com.alpkcgl.fikirhane.data.model.CommentsResponse
+import com.alpkcgl.fikirhane.data.model.FollowResult
+import com.alpkcgl.fikirhane.data.model.LikeResult
+import com.alpkcgl.fikirhane.data.model.NotificationsPage
+import com.alpkcgl.fikirhane.data.model.Profile
+import com.alpkcgl.fikirhane.data.model.ProfileInput
+import com.alpkcgl.fikirhane.data.model.ReportInput
+import com.alpkcgl.fikirhane.data.model.ReportStatus
+import com.alpkcgl.fikirhane.data.model.Role
+import com.alpkcgl.fikirhane.data.model.RoleInput
+import com.alpkcgl.fikirhane.data.model.SearchResponse
+import com.alpkcgl.fikirhane.data.model.StatusInput
+import com.alpkcgl.fikirhane.data.model.UnreadCount
 import com.alpkcgl.fikirhane.data.model.Category
 import com.alpkcgl.fikirhane.data.model.EmailRequest
 import com.alpkcgl.fikirhane.data.model.Page
@@ -72,6 +91,9 @@ class FikirhaneApi(private val http: HttpClient) {
                 parameter("author", query.author)
                 parameter("category", query.category)
                 parameter("tag", query.tag)
+                parameter("sort", query.sort)
+                if (query.following) parameter("following", true)
+                if (query.bookmarked) parameter("bookmarked", true)
             }
         }
 
@@ -107,6 +129,90 @@ class FikirhaneApi(private val http: HttpClient) {
                 },
             ) { bearerAuth(accessToken) }
         }.url
+
+    // Beğeni, kaydetme, yorumlar
+
+    suspend fun toggleLike(accessToken: String, postId: String): LikeResult =
+        call { http.post("posts/$postId/like") { bearerAuth(accessToken) } }
+
+    suspend fun toggleBookmark(accessToken: String, postId: String): BookmarkResult =
+        call { http.post("posts/$postId/bookmark") { bearerAuth(accessToken) } }
+
+    suspend fun listComments(postId: String): List<Comment> =
+        call<CommentsResponse> { http.get("posts/$postId/comments") }.items
+
+    suspend fun createComment(accessToken: String, postId: String, input: CommentInput): Comment =
+        call { http.post("posts/$postId/comments") { bearerAuth(accessToken); json(input) } }
+
+    // Profil ve takip
+
+    suspend fun getProfile(accessToken: String, username: String): Profile =
+        call { http.get("users/${username.encodeURLPathPart()}") { bearerAuth(accessToken) } }
+
+    suspend fun updateProfile(accessToken: String, input: ProfileInput): UserResponse =
+        call { http.patch("users/me") { bearerAuth(accessToken); json(input) } }
+
+    suspend fun toggleFollow(accessToken: String, userId: String): FollowResult =
+        call { http.post("users/$userId/follow") { bearerAuth(accessToken) } }
+
+    // Arama
+
+    suspend fun search(q: String, page: Int): SearchResponse =
+        call { http.get("search") { parameter("q", q); parameter("page", page) } }
+
+    // Bildirimler
+
+    suspend fun listNotifications(accessToken: String, page: Int): NotificationsPage =
+        call { http.get("notifications") { bearerAuth(accessToken); parameter("page", page) } }
+
+    suspend fun unreadNotificationCount(accessToken: String): Int =
+        call<UnreadCount> { http.get("notifications/unread-count") { bearerAuth(accessToken) } }.unreadCount
+
+    suspend fun markAllNotificationsRead(accessToken: String) {
+        call<JsonObject> { http.patch("notifications/read-all") { bearerAuth(accessToken) } }
+    }
+
+    // Şikâyet ve yönetim
+
+    suspend fun createReport(accessToken: String, input: ReportInput) {
+        call<JsonObject> { http.post("reports") { bearerAuth(accessToken); json(input) } }
+    }
+
+    suspend fun listReports(accessToken: String, status: ReportStatus, page: Int): Page<AdminReport> =
+        call {
+            http.get("admin/reports") {
+                bearerAuth(accessToken)
+                parameter("status", status.name)
+                parameter("page", page)
+            }
+        }
+
+    suspend fun resolveReport(accessToken: String, id: String, status: ReportStatus) {
+        call<JsonObject> { http.patch("admin/reports/$id") { bearerAuth(accessToken); json(StatusInput(status)) } }
+    }
+
+    suspend fun removePost(accessToken: String, id: String): Unit =
+        call { http.delete("admin/posts/$id") { bearerAuth(accessToken) } }
+
+    suspend fun removeComment(accessToken: String, id: String): Unit =
+        call { http.delete("admin/comments/$id") { bearerAuth(accessToken) } }
+
+    suspend fun listUsers(accessToken: String, q: String?, page: Int): Page<AdminUser> =
+        call {
+            http.get("admin/users") {
+                bearerAuth(accessToken)
+                parameter("q", q?.takeIf { it.isNotBlank() })
+                parameter("page", page)
+            }
+        }
+
+    suspend fun setBan(accessToken: String, userId: String, banned: Boolean) {
+        call<JsonObject> { http.patch("admin/users/$userId/ban") { bearerAuth(accessToken); json(BanInput(banned)) } }
+    }
+
+    suspend fun setRole(accessToken: String, userId: String, role: Role) {
+        call<JsonObject> { http.patch("admin/users/$userId/role") { bearerAuth(accessToken); json(RoleInput(role)) } }
+    }
 
     private inline fun <reified T> HttpRequestBuilder.json(body: T) {
         contentType(ContentType.Application.Json)

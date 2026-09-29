@@ -96,4 +96,10 @@ data class PostQuery(
     val author: String? = null,
     val category: String? = null,
     val tag: String? = null,
+    /** "new" (varsayılan) ya da "popular" (beğeni > yorum > yenilik). */
+    val sort: String? = null,
+    /** Yalnızca takip edilen yazarlar. */
+    val following: Boolean = false,
+    /** Yalnızca kaydedilenler. */
+    val bookmarked: Boolean = false,
 )

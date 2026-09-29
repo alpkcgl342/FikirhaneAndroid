@@ -2,6 +2,7 @@ package com.alpkcgl.fikirhane.ui.posts
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,13 +46,14 @@ import com.alpkcgl.fikirhane.ui.theme.TextMuted
 
 /** Kategori ya da durum rozeti. */
 @Composable
-fun Badge(text: String, muted: Boolean = false) {
+fun Badge(text: String, muted: Boolean = false, onClick: (() -> Unit)? = null) {
     Text(
         text = text,
         style = MaterialTheme.typography.labelMedium,
         color = if (muted) TextMuted else PrimaryHover,
         modifier = Modifier
             .clip(RoundedCornerShape(50))
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .background(if (muted) MaterialTheme.colorScheme.outline.copy(alpha = 0.4f) else PrimarySoft)
             .padding(horizontal = 10.dp, vertical = 2.dp),
     )
@@ -59,10 +61,24 @@ fun Badge(text: String, muted: Boolean = false) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TagRow(tags: List<String>) {
+fun TagRow(tags: List<String>, onTagClick: ((String) -> Unit)? = null) {
     if (tags.isEmpty()) return
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        tags.forEach { Text("#$it", style = MaterialTheme.typography.bodySmall, color = TextMuted) }
+        tags.forEach { tag ->
+            Text(
+                "#$tag",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextMuted,
+                modifier = if (onTagClick != null) {
+                    Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable { onTagClick(tag) }
+                        .padding(vertical = 4.dp)
+                } else {
+                    Modifier
+                },
+            )
+        }
     }
 }
 

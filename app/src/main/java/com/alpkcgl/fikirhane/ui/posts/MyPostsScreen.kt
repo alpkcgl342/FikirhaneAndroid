@@ -6,7 +6,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -37,6 +38,7 @@ enum class MyPostsFilter(val label: String, val empty: String) {
     All("Tümü", "Henüz hiç yazın yok."),
     Drafts("Taslaklar", "Taslak yazın yok."),
     Published("Yayınlananlar", "Henüz yayınlanmış yazın yok."),
+    Bookmarked("Kaydedilenler", "Henüz kaydettiğin bir yazı yok. Beğendiğin yazıları Kaydet ile buraya ekleyebilirsin."),
 }
 
 class MyPostsViewModel(
@@ -53,6 +55,7 @@ class MyPostsViewModel(
             MyPostsFilter.All -> PostQuery(status = "ALL")
             MyPostsFilter.Drafts -> PostQuery(status = "DRAFT")
             MyPostsFilter.Published -> PostQuery(author = auth.currentUser.value?.username)
+            MyPostsFilter.Bookmarked -> PostQuery(bookmarked = true)
         }
         posts.list(query, page)
     }
@@ -108,7 +111,11 @@ fun MyPostsScreen(
         },
     ) { padding ->
         Column(Modifier.padding(padding)) {
-            PrimaryTabRow(selectedTabIndex = filter.ordinal, containerColor = MaterialTheme.colorScheme.surface) {
+            PrimaryScrollableTabRow(
+                selectedTabIndex = filter.ordinal,
+                containerColor = MaterialTheme.colorScheme.surface,
+                edgePadding = 8.dp,
+            ) {
                 MyPostsFilter.entries.forEach { f ->
                     Tab(selected = f == filter, onClick = { viewModel.select(f) }, text = { Text(f.label) })
                 }
@@ -120,7 +127,8 @@ fun MyPostsScreen(
                 onRetry = viewModel::retry,
                 onPostClick = { onPostClick(it.slug) },
                 emptyText = filter.empty,
-                showStatus = true,
+                // Kaydedilenler başkalarının yazıları olabilir; taslak rozeti yalnızca kendi yazılarında.
+                showStatus = filter != MyPostsFilter.Bookmarked,
             )
         }
     }

@@ -74,6 +74,11 @@ class AuthRepository(
         _currentUser.value = null
     }
 
+    /** Profil güncellemesinden sonra oturumdaki kullanıcıyı değiştirir. */
+    fun updateCurrentUser(user: PublicUser) {
+        session?.let { setSession(it.copy(user = user)) }
+    }
+
     /** Kullanıcı bilgisini sunucudan tazeler (ör. rol değiştiyse). */
     suspend fun refreshUser(): PublicUser {
         val user = authorized { token -> api.me(token).user }

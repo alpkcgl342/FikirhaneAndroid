@@ -6,7 +6,10 @@ import com.alpkcgl.fikirhane.data.api.FikirhaneApi
 import com.alpkcgl.fikirhane.data.api.HttpClientFactory
 import com.alpkcgl.fikirhane.data.image.ImagePreparer
 import com.alpkcgl.fikirhane.data.repository.AuthRepository
+import com.alpkcgl.fikirhane.data.repository.ModerationRepository
+import com.alpkcgl.fikirhane.data.repository.NotificationsRepository
 import com.alpkcgl.fikirhane.data.repository.PostsRepository
+import com.alpkcgl.fikirhane.data.repository.UsersRepository
 import com.alpkcgl.fikirhane.data.session.SharedPreferencesSessionStore
 import io.ktor.client.engine.okhttp.OkHttp
 
@@ -21,6 +24,9 @@ class AppContainer(context: Context) {
 
     val authRepository = AuthRepository(api, SharedPreferencesSessionStore(context))
     val postsRepository = PostsRepository(api, authRepository)
+    val usersRepository = UsersRepository(api, authRepository)
+    val notificationsRepository = NotificationsRepository(api, authRepository)
+    val moderationRepository = ModerationRepository(api, authRepository, postsRepository)
     val imagePreparer = ImagePreparer(context.contentResolver)
 }
 
